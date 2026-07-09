@@ -880,30 +880,27 @@
 </div>
 <script>
 (function(){
-  // Disable all internal scrolling - overflow hidden on html and body
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
-
   var tabs = document.querySelectorAll('.dbmc-tab');
-
-  function scrollToSection(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    // Get element's position relative to top of iframe document
-    var rect = el.getBoundingClientRect();
-    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    var elTop = rect.top + scrollTop;
-    // Tell parent page to scroll to: iframe's top position + element's position inside iframe
-    window.parent.postMessage({ type: 'dbmc-scroll', offset: elTop }, '*');
-    // Update active tab
-    tabs.forEach(function(c){ c.classList.remove('dbmc-tab-active'); });
-  }
-
   tabs.forEach(function(t){
     t.addEventListener('click', function(e){
       e.preventDefault();
       var id = t.getAttribute('href').replace('#','');
-      scrollToSection(id);
+      var el = document.getElementById(id);
+      if(!el) return;
+      // Get element's Y position within this iframe document
+      var elTop = el.getBoundingClientRect().top + window.pageYOffset;
+      // Get iframe's Y position within the parent GoDaddy page
+      try {
+        var iframeEl = window.parent.document.querySelector('iframe[src*="gavydong.github.io"]');
+        if(iframeEl){
+          var iframeTop = iframeEl.getBoundingClientRect().top + window.parent.pageYOffset;
+          window.parent.scrollTo({top: iframeTop + elTop, behavior: 'smooth'});
+        }
+      } catch(err){
+        // fallback: scroll inside iframe
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+      tabs.forEach(function(c){ c.classList.remove('dbmc-tab-active'); });
       t.classList.add('dbmc-tab-active');
     });
   });
