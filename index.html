@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en" style="scroll-behavior:smooth">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
@@ -79,7 +79,7 @@
 .dbmc-tab em { display: inline-flex; margin-top: 13px; font-style: normal; color: var(--dbmc-muted); font-size: 0.84rem; }
 
 .dbmc-main { padding: 34px 0 70px; }
-.dbmc-panel-block { margin-top: 36px; scroll-margin-top: 80px; }
+.dbmc-panel-block { margin-top: 36px;  }
 .dbmc-panel-feature {
   position: relative; background: rgba(255,255,255,0.90); border: 1px solid var(--dbmc-line);
   border-radius: var(--dbmc-radius-xl); box-shadow: var(--dbmc-shadow); overflow: hidden;
@@ -880,24 +880,33 @@
 </div>
 <script>
 (function(){
+  // Disable all internal scrolling - overflow hidden on html and body
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+
   var tabs = document.querySelectorAll('.dbmc-tab');
+
+  function scrollToSection(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    // Get element's position relative to top of iframe document
+    var rect = el.getBoundingClientRect();
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var elTop = rect.top + scrollTop;
+    // Tell parent page to scroll to: iframe's top position + element's position inside iframe
+    window.parent.postMessage({ type: 'dbmc-scroll', offset: elTop }, '*');
+    // Update active tab
+    tabs.forEach(function(c){ c.classList.remove('dbmc-tab-active'); });
+  }
+
   tabs.forEach(function(t){
     t.addEventListener('click', function(e){
       e.preventDefault();
       var id = t.getAttribute('href').replace('#','');
-      var el = document.getElementById(id);
-      if(!el) return;
-      el.scrollIntoView({behavior:'smooth', block:'start'});
-      tabs.forEach(function(c){ c.classList.remove('dbmc-tab-active'); });
+      scrollToSection(id);
       t.classList.add('dbmc-tab-active');
     });
   });
-  // Handle hash on initial load (e.g. direct URL with #workshop-N)
-  var h = window.location.hash.replace('#','');
-  if(h){ setTimeout(function(){
-    var el = document.getElementById(h);
-    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-  }, 150); }
 })();
 </script>
 </body>
